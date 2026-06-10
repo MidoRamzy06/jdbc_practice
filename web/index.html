@@ -1,0 +1,1048 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CompanyDB Visual Explorer</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0f1d;
+            --bg-secondary: #121829;
+            --bg-glass: rgba(18, 24, 41, 0.7);
+            --border-glass: rgba(255, 255, 255, 0.08);
+            --accent-gradient: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
+            --accent-primary: #00f2fe;
+            --accent-secondary: #4facfe;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --text-success: #10b981;
+            --text-error: #ef4444;
+            --shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            --font-main: 'Inter', sans-serif;
+            --font-display: 'Outfit', sans-serif;
+            --font-mono: 'Fira Code', monospace;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-main);
+            font-family: var(--font-main);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+        }
+
+        /* Sidebar Styling */
+        aside {
+            width: 260px;
+            background-color: var(--bg-secondary);
+            border-right: 1px solid var(--border-glass);
+            display: flex;
+            flex-direction: column;
+            padding: 24px;
+            z-index: 10;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 36px;
+        }
+
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            background: var(--accent-gradient);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(0, 242, 254, 0.3);
+        }
+
+        .logo-icon svg {
+            width: 20px;
+            height: 20px;
+            fill: #000;
+        }
+
+        .logo-title {
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 1.25rem;
+            letter-spacing: -0.5px;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .menu-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .menu-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 28px;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: 8px;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .menu-item:hover {
+            color: var(--text-main);
+            background-color: rgba(255, 255, 255, 0.03);
+        }
+
+        .menu-item.active {
+            color: #000;
+            background: var(--accent-gradient);
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(0, 242, 254, 0.2);
+        }
+
+        .menu-item svg {
+            width: 18px;
+            height: 18px;
+            fill: currentColor;
+        }
+
+        .table-list-container {
+            flex-grow: 1;
+            overflow-y: auto;
+            margin-top: 8px;
+            padding-right: 4px;
+        }
+
+        .table-list-container::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .table-list-container::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+        }
+
+        .table-item {
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .table-item:hover {
+            color: var(--accent-primary);
+            background-color: rgba(0, 242, 254, 0.05);
+        }
+
+        .table-item.active {
+            color: var(--accent-primary);
+            font-weight: 600;
+            background-color: rgba(0, 242, 254, 0.08);
+        }
+
+        /* Main Workspace */
+        main {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Header */
+        header {
+            height: 70px;
+            border-bottom: 1px solid var(--border-glass);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 40px;
+            background-color: rgba(10, 15, 29, 0.4);
+            backdrop-filter: blur(10px);
+        }
+
+        .header-title-section h1 {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background-color: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-glass);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.813rem;
+            font-weight: 500;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .status-dot.connected {
+            background-color: var(--text-success);
+            box-shadow: 0 0 8px var(--text-success);
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.disconnected {
+            background-color: var(--text-error);
+            box-shadow: 0 0 8px var(--text-error);
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+
+        /* Content Area */
+        .content-container {
+            flex-grow: 1;
+            padding: 40px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 28px;
+        }
+
+        .content-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .content-container::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+
+        /* Glass Cards */
+        .glass-card {
+            background: var(--bg-glass);
+            border: 1px solid var(--border-glass);
+            border-radius: 16px;
+            padding: 28px;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(16px);
+        }
+
+        /* Grid layouts */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+        }
+
+        .stat-card {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-glass);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent-primary);
+        }
+
+        .stat-icon svg {
+            width: 24px;
+            height: 24px;
+            fill: currentColor;
+        }
+
+        .stat-info .stat-value {
+            font-family: var(--font-display);
+            font-size: 1.75rem;
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: 2px;
+        }
+
+        .stat-info .stat-label {
+            font-size: 0.813rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        /* SQL Editor Console */
+        .console-editor {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .console-textarea-container {
+            position: relative;
+            border-radius: 8px;
+            border: 1px solid var(--border-glass);
+            background-color: #050811;
+        }
+
+        .console-textarea {
+            width: 100%;
+            height: 150px;
+            background: transparent;
+            border: none;
+            color: #10b981;
+            font-family: var(--font-mono);
+            font-size: 0.95rem;
+            padding: 16px;
+            resize: vertical;
+            outline: none;
+            line-height: 1.5;
+        }
+
+        .console-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .preset-select {
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-glass);
+            color: var(--text-main);
+            padding: 10px 16px;
+            border-radius: 8px;
+            outline: none;
+            font-size: 0.875rem;
+            cursor: pointer;
+            width: 280px;
+        }
+
+        .run-btn {
+            background: var(--accent-gradient);
+            border: none;
+            color: #000;
+            padding: 10px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 15px rgba(0, 242, 254, 0.2);
+        }
+
+        .run-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(0, 242, 254, 0.35);
+        }
+
+        .run-btn:active {
+            transform: translateY(1px);
+        }
+
+        .run-btn svg {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+        }
+
+        /* Data Tables styling */
+        .table-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            border-radius: 8px;
+            border: 1px solid var(--border-glass);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.875rem;
+        }
+
+        th {
+            background-color: rgba(255, 255, 255, 0.02);
+            color: var(--accent-primary);
+            font-weight: 600;
+            padding: 14px 20px;
+            border-bottom: 1px solid var(--border-glass);
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 1px;
+        }
+
+        td {
+            padding: 14px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            color: var(--text-main);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background-color: rgba(255, 255, 255, 0.01);
+            color: #fff;
+        }
+
+        /* Error States & Loading States */
+        .loader {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 0;
+            gap: 16px;
+            color: var(--text-muted);
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(255, 255, 255, 0.05);
+            border-top: 3px solid var(--accent-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-card {
+            background-color: rgba(239, 68, 68, 0.05);
+            border: 1px solid rgba(239, 68, 68, 0.15);
+            border-radius: 8px;
+            padding: 20px;
+            color: var(--text-error);
+            margin-top: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .error-card-title {
+            font-weight: 600;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .error-card-body {
+            font-family: var(--font-mono);
+            font-size: 0.813rem;
+            white-space: pre-wrap;
+            line-height: 1.5;
+            background-color: rgba(0, 0, 0, 0.2);
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid rgba(239, 68, 68, 0.1);
+        }
+
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 0;
+            color: var(--text-muted);
+            text-align: center;
+            gap: 12px;
+        }
+
+        .empty-state svg {
+            width: 48px;
+            height: 48px;
+            fill: currentColor;
+            opacity: 0.4;
+        }
+
+        /* Section visibility toggle */
+        .view-section {
+            display: none;
+        }
+
+        .view-section.active {
+            display: flex;
+            flex-direction: column;
+            gap: 28px;
+        }
+
+        /* Grid Layouts for views */
+        .cards-container-split {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 28px;
+        }
+
+        @media (max-width: 1024px) {
+            .cards-container-split {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- SIDEBAR -->
+    <aside>
+        <div class="logo-container">
+            <div class="logo-icon">
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 2C6.48 2 2 4.69 2 8v8c0 3.31 4.48 6 10 6s10-2.69 10-6V8c0-3.31-4.48-6-10-6zm0 18c-4.41 0-8-2.03-8-4.5v-2.24c1.83 1.2 4.75 1.94 8 1.94s6.17-.74 8-1.94v2.24c0 2.47-3.59 4.5-8 4.5zm0-6.5c-4.41 0-8-2.03-8-4.5v-2.24c1.83 1.2 4.75 1.94 8 1.94s6.17-.74 8-1.94v2.24c0 2.47-3.59 4.5-8 4.5zm0-6.5c-4.41 0-8-2.03-8-4.5S7.59 3 12 3s8 2.03 8 4.5S16.41 11 12 11z"/>
+                </svg>
+            </div>
+            <span class="logo-title">CompanyDB</span>
+        </div>
+
+        <div class="menu-label">Explorer</div>
+        <ul class="menu-list">
+            <li class="menu-item active" onclick="switchView('dashboard', this)">
+                <svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+                Dashboard
+            </li>
+            <li class="menu-item" onclick="switchView('insights', this)">
+                <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg>
+                Insights & Stats
+            </li>
+            <li class="menu-item" onclick="switchView('console', this)">
+                <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-8 12H4v-2h8v2zm8-4H4V8h16v4z"/></svg>
+                SQL Console
+            </li>
+        </ul>
+
+        <div class="menu-label">Tables</div>
+        <div class="table-list-container" id="sidebar-tables-list">
+            <!-- Table list items injected via JavaScript -->
+            <div class="loader" style="padding: 20px 0;"><div class="spinner" style="width:20px; height:20px; border-width:2px;"></div></div>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTAINER -->
+    <main>
+        <!-- HEADER -->
+        <header>
+            <div class="header-title-section">
+                <h1 id="view-title">Dashboard Overview</h1>
+            </div>
+            <div class="status-badge" id="db-status-badge">
+                <span class="status-dot disconnected" id="db-status-dot"></span>
+                <span id="db-status-text">Checking connection...</span>
+            </div>
+        </header>
+
+        <!-- CONTENT AREA -->
+        <div class="content-container">
+
+            <!-- DASHBOARD VIEW -->
+            <div id="view-dashboard" class="view-section active">
+                <div class="dashboard-grid" id="dashboard-stats-grid">
+                    <!-- Stat cards injected dynamically -->
+                </div>
+
+                <div class="cards-container-split">
+                    <div class="glass-card">
+                        <h3 style="margin-bottom: 20px; font-family: var(--font-display);">Quick Schema Info</h3>
+                        <div class="table-wrapper">
+                            <table id="schema-info-table">
+                                <thead>
+                                    <tr>
+                                        <th>Table Name</th>
+                                        <th>Engine Type</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="schema-info-body">
+                                    <!-- Injected dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="glass-card" style="display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; gap: 16px;">
+                        <div style="background: rgba(0, 242, 254, 0.05); border: 1px solid var(--border-glass); border-radius: 50%; width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; color: var(--accent-primary);">
+                            <svg viewBox="0 0 24 24" style="width: 40px; height: 40px; fill: currentColor;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+                        </div>
+                        <h3 style="font-family: var(--font-display); font-size: 1.25rem;">Active Local SQL Instance</h3>
+                        <p style="color: var(--text-muted); font-size: 0.875rem; max-width: 320px; line-height: 1.5;">
+                            Currently polling Microsoft SQL Server on <strong>localhost:1433</strong>. The application is accessing <strong>CompanyDB</strong>.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- INSIGHTS VIEW -->
+            <div id="view-insights" class="view-section">
+                <div class="glass-card">
+                    <h3 style="margin-bottom: 20px; font-family: var(--font-display);">Average Salary by Department</h3>
+                    <div class="table-wrapper" id="insights-salary-table-wrapper">
+                        <!-- Injected dynamically -->
+                    </div>
+                </div>
+
+                <div class="glass-card">
+                    <h3 style="margin-bottom: 20px; font-family: var(--font-display);">Employee Project Assignments</h3>
+                    <div class="table-wrapper" id="insights-assignments-table-wrapper">
+                        <!-- Injected dynamically -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- DYNAMIC TABLE DATA VIEW -->
+            <div id="view-table-data" class="view-section">
+                <div class="glass-card">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
+                        <h3 id="table-data-title" style="font-family: var(--font-display);">Table Data</h3>
+                        <button class="run-btn" id="refresh-table-btn" style="padding: 8px 16px; font-size: 0.813rem;">
+                            <svg viewBox="0 0 24 24" style="width:14px; height:14px;"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+                            Refresh
+                        </button>
+                    </div>
+                    <div class="table-wrapper" id="table-data-wrapper">
+                        <!-- Injected dynamically -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- SQL CONSOLE VIEW -->
+            <div id="view-console" class="view-section">
+                <div class="glass-card console-editor">
+                    <h3 style="font-family: var(--font-display);">SQL Console Terminal</h3>
+                    <p style="color: var(--text-muted); font-size: 0.875rem; margin-top: -8px;">
+                        Execute custom SQL statements directly against your local SQL Server instance.
+                    </p>
+
+                    <div class="console-textarea-container">
+                        <textarea class="console-textarea" id="sql-input-area" placeholder="SELECT * FROM Employees WHERE salary > 70000;"></textarea>
+                    </div>
+
+                    <div class="console-controls">
+                        <select class="preset-select" id="console-preset-select" onchange="loadPresetQuery()">
+                            <option value="">-- Choose a Preset Query --</option>
+                            <option value="SELECT * FROM Employees ORDER BY salary DESC;">Show All Employees (Sorted by Salary)</option>
+                            <option value="SELECT d.name, SUM(d.budget) AS TotalBudget FROM Departments d GROUP BY d.name;">Aggregate Department Budgets</option>
+                            <option value="SELECT e.first_name, e.last_name, p.name AS ProjectName, ep.role FROM Employees e JOIN EmployeeProjects ep ON e.employee_id = ep.employee_id JOIN Projects p ON ep.project_id = p.project_id;">List Project Assignments Details</option>
+                            <option value="SELECT * FROM Projects WHERE status = 'Active';">View Active Projects</option>
+                        </select>
+
+                        <button class="run-btn" onclick="runConsoleQuery()">
+                            <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                            Run Command
+                        </button>
+                    </div>
+                </div>
+
+                <div class="glass-card" id="console-results-card" style="display: none;">
+                    <h4 style="margin-bottom: 16px; font-family: var(--font-display); color: var(--accent-primary);">Query Result</h4>
+                    <div class="table-wrapper" id="console-results-wrapper">
+                        <!-- Query results injected here -->
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        const API_BASE = 'http://localhost:8080/api';
+        let currentActiveTable = '';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            checkConnectionStatus();
+            loadSidebarTables();
+            loadDashboardData();
+            
+            // Set up refresh button
+            document.getElementById('refresh-table-btn').addEventListener('click', () => {
+                if (currentActiveTable) {
+                    loadTableData(currentActiveTable);
+                }
+            });
+        });
+
+        // Check Connection
+        async function checkConnectionStatus() {
+            const statusDot = document.getElementById('db-status-dot');
+            const statusText = document.getElementById('db-status-text');
+            
+            try {
+                const response = await fetch(`${API_BASE}/status`);
+                const data = await response.json();
+                
+                if (data.status === 'connected') {
+                    statusDot.className = 'status-dot connected';
+                    statusText.innerText = `Connected (SQL Server - CompanyDB)`;
+                    return true;
+                } else {
+                    statusDot.className = 'status-dot disconnected';
+                    statusText.innerText = `Failed to Connect: ${data.message || 'Unknown Error'}`;
+                    return false;
+                }
+            } catch (err) {
+                statusDot.className = 'status-dot disconnected';
+                statusText.innerText = `Offline: Server Unreachable`;
+                return false;
+            }
+        }
+
+        // Sidebar Navigation
+        function switchView(viewName, menuItemElement) {
+            // Remove active classes
+            document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.table-item').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+
+            // Set Title
+            const viewTitle = document.getElementById('view-title');
+            if (viewName === 'dashboard') {
+                viewTitle.innerText = 'Dashboard Overview';
+                document.getElementById('view-dashboard').classList.add('active');
+                if (menuItemElement) menuItemElement.classList.add('active');
+                loadDashboardData();
+            } else if (viewName === 'insights') {
+                viewTitle.innerText = 'Analytics & Insights';
+                document.getElementById('view-insights').classList.add('active');
+                if (menuItemElement) menuItemElement.classList.add('active');
+                loadInsightsData();
+            } else if (viewName === 'console') {
+                viewTitle.innerText = 'SQL Console Command';
+                document.getElementById('view-console').classList.add('active');
+                if (menuItemElement) menuItemElement.classList.add('active');
+            }
+        }
+
+        // Load Tables on Sidebar
+        async function loadSidebarTables() {
+            const container = document.getElementById('sidebar-tables-list');
+            try {
+                const response = await fetch(`${API_BASE}/tables`);
+                if (!response.ok) throw new Error('Failed to load tables');
+                const tables = await response.json();
+                
+                if (tables.length === 0) {
+                    container.innerHTML = '<div style="color:var(--text-muted);font-size:0.8rem;padding:10px;">No tables found</div>';
+                    return;
+                }
+
+                let html = '';
+                tables.forEach(row => {
+                    const name = row.TABLE_NAME;
+                    html += `
+                        <div class="table-item" id="tbl-item-${name}" onclick="selectTable('${name}')">
+                            <svg viewBox="0 0 24 24" style="width:14px; height:14px; fill:currentColor;"><path d="M12 2C6.48 2 2 5.58 2 10v4c0 4.42 4.48 8 10 8s10-3.58 10-8v-4c0-4.42-4.48-8-10-8zm0 18c-4.41 0-8-1.79-8-4v-2c1.68 1.07 4.63 1.75 8 1.75s6.32-.68 8-1.75v2c0 2.21-3.59 4-8 4zm0-6c-4.41 0-8-1.79-8-4V8c1.68 1.07 4.63 1.75 8 1.75s6.32-.68 8-1.75v2c0 2.21-3.59 4-8 4zm0-6c-4.41 0-8-1.79-8-4s3.59-4 8-4 8 1.79 8 4-3.59 4-8 4z"/></svg>
+                            ${name}
+                        </div>
+                    `;
+                });
+                container.innerHTML = html;
+                
+                // Inject table metadata to Dashboard schema table
+                const schemaBody = document.getElementById('schema-info-body');
+                let schemaHtml = '';
+                tables.forEach(row => {
+                    schemaHtml += `
+                        <tr>
+                            <td style="font-weight: 500;">${row.TABLE_NAME}</td>
+                            <td><span style="font-family: var(--font-mono); font-size: 0.8rem; background-color: rgba(255,255,255,0.03); padding: 2px 6px; border-radius: 4px; border:1px solid var(--border-glass);">MS SQL Relation</span></td>
+                        </tr>
+                    `;
+                });
+                schemaBody.innerHTML = schemaHtml;
+                
+            } catch (err) {
+                container.innerHTML = `<div style="color:var(--text-error); font-size:0.8rem; padding:10px;">Error loading tables</div>`;
+            }
+        }
+
+        // Select specific Table
+        function selectTable(tableName) {
+            currentActiveTable = tableName;
+            
+            // Highlight in sidebar
+            document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.table-item').forEach(el => el.classList.remove('active'));
+            const sidebarItem = document.getElementById(`tbl-item-${tableName}`);
+            if (sidebarItem) sidebarItem.classList.add('active');
+
+            // Switch Title
+            document.getElementById('view-title').innerText = `Table: ${tableName}`;
+            
+            // Switch View
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            document.getElementById('view-table-data').classList.add('active');
+            document.getElementById('table-data-title').innerText = `${tableName} (Direct Row View)`;
+
+            loadTableData(tableName);
+        }
+
+        // Load Table Data
+        async function loadTableData(tableName) {
+            const wrapper = document.getElementById('table-data-wrapper');
+            wrapper.innerHTML = renderSpinner();
+            
+            try {
+                const response = await fetch(`${API_BASE}/data?table=${encodeURIComponent(tableName)}`);
+                if (!response.ok) {
+                    const errData = await response.json();
+                    throw new Error(errData.error || 'Failed to fetch rows');
+                }
+                const data = await response.json();
+                wrapper.innerHTML = generateHtmlTable(data);
+            } catch (err) {
+                wrapper.innerHTML = renderError('Data Load Failure', err.message);
+            }
+        }
+
+        // Load Dashboard Statistics Cards
+        async function loadDashboardData() {
+            const grid = document.getElementById('dashboard-stats-grid');
+            grid.innerHTML = `
+                <div class="loader" style="grid-column: 1 / -1;"><div class="spinner"></div></div>
+            `;
+
+            try {
+                // We run custom stats query via /api/query
+                const empQuery = "SELECT COUNT(*) AS total FROM Employees";
+                const deptQuery = "SELECT COUNT(*) AS total FROM Departments";
+                const projQuery = "SELECT COUNT(*) AS total FROM Projects";
+                
+                const [empRes, deptRes, projRes] = await Promise.all([
+                    fetch(`${API_BASE}/query?sql=${encodeURIComponent(empQuery)}`).then(r => r.json()),
+                    fetch(`${API_BASE}/query?sql=${encodeURIComponent(deptQuery)}`).then(r => r.json()),
+                    fetch(`${API_BASE}/query?sql=${encodeURIComponent(projQuery)}`).then(r => r.json())
+                ]);
+
+                const empCount = empRes[0]?.total || 0;
+                const deptCount = deptRes[0]?.total || 0;
+                const projCount = projRes[0]?.total || 0;
+
+                grid.innerHTML = `
+                    <div class="glass-card stat-card">
+                        <div class="stat-icon">
+                            <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+                        </div>
+                        <div class="stat-info">
+                            <div class="stat-value">${empCount}</div>
+                            <div class="stat-label">Total Employees</div>
+                        </div>
+                    </div>
+                    <div class="glass-card stat-card">
+                        <div class="stat-icon" style="color: #c084fc;">
+                            <svg viewBox="0 0 24 24"><path d="M12 7V3H2v18h20V7H12zM6 19H4v-2h2v2zm0-4H4v-2h2v2zm0-4H4V9h2v2zm0-4H4V5h2v2zm4 12H8v-2h2v2zm0-4H8v-2h2v2zm0-4H8V9h2v2zm0-4H8V5h2v2zm10 12h-8v-2h2v-2h-2v-2h2v-2h-2V9h8v10zm-2-8h-2v2h2v-2zm0 4h-2v2h2v-2z"/></svg>
+                        </div>
+                        <div class="stat-info">
+                            <div class="stat-value">${deptCount}</div>
+                            <div class="stat-label">Departments</div>
+                        </div>
+                    </div>
+                    <div class="glass-card stat-card">
+                        <div class="stat-icon" style="color: #fb7185;">
+                            <svg viewBox="0 0 24 24"><path d="M14 6V4h-4v2h4zM4 8v11c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-3V4c0-1.1-.9-2-2-2h-4c-1.1 0-2 .9-2 2v2H6c-1.1 0-2 .9-2 2zm10 2v10h-4V10h4z"/></svg>
+                        </div>
+                        <div class="stat-info">
+                            <div class="stat-value">${projCount}</div>
+                            <div class="stat-label">Active Projects</div>
+                        </div>
+                    </div>
+                `;
+            } catch (err) {
+                grid.innerHTML = `
+                    <div style="grid-column: 1 / -1;">
+                        ${renderError('Statistics Fetch Failed', 'Database could not be reached. Ensure Java server is online and SQL Server is running.')}
+                    </div>
+                `;
+            }
+        }
+
+        // Load Analytics view
+        async function loadInsightsData() {
+            const salaryWrapper = document.getElementById('insights-salary-table-wrapper');
+            const assignmentsWrapper = document.getElementById('insights-assignments-table-wrapper');
+            
+            salaryWrapper.innerHTML = renderSpinner();
+            assignmentsWrapper.innerHTML = renderSpinner();
+
+            try {
+                const salResponse = await fetch(`${API_BASE}/insights/salaries`);
+                const salData = await salResponse.json();
+                salaryWrapper.innerHTML = generateHtmlTable(salData);
+            } catch(e) {
+                salaryWrapper.innerHTML = renderError('Insights Load Failure', e.message);
+            }
+
+            try {
+                const assignResponse = await fetch(`${API_BASE}/insights/assignments`);
+                const assignData = await assignResponse.json();
+                assignmentsWrapper.innerHTML = generateHtmlTable(assignData);
+            } catch(e) {
+                assignmentsWrapper.innerHTML = renderError('Insights Load Failure', e.message);
+            }
+        }
+
+        // Load Preset Query into SQL editor
+        function loadPresetQuery() {
+            const select = document.getElementById('console-preset-select');
+            const textarea = document.getElementById('sql-input-area');
+            if (select.value) {
+                textarea.value = select.value;
+            }
+        }
+
+        // Execute SQL statement in SQL Console
+        async function runConsoleQuery() {
+            const textarea = document.getElementById('sql-input-area');
+            const resultsCard = document.getElementById('console-results-card');
+            const resultsWrapper = document.getElementById('console-results-wrapper');
+            const sql = textarea.value.trim();
+
+            if (!sql) {
+                alert('Please type or choose a SQL statement to execute.');
+                return;
+            }
+
+            resultsCard.style.display = 'block';
+            resultsWrapper.innerHTML = renderSpinner();
+
+            try {
+                const response = await fetch(`${API_BASE}/query?sql=${encodeURIComponent(sql)}`);
+                const data = await response.json();
+                
+                if (data.error) {
+                    resultsWrapper.innerHTML = renderError('SQL Execution Error', data.error);
+                } else if (data.message) {
+                    // Update Query Success (INSERT, UPDATE, DELETE)
+                    resultsWrapper.innerHTML = `
+                        <div style="background-color: rgba(16,185,129,0.05); border:1px solid rgba(16,185,129,0.2); border-radius:6px; padding:16px; color:var(--text-success); font-family:var(--font-mono); font-size:0.875rem;">
+                            ${data.message}
+                            ${data.rowsAffected !== undefined ? `<br/>Rows affected: ${data.rowsAffected}` : ''}
+                        </div>
+                    `;
+                } else {
+                    // SELECT Query Success
+                    resultsWrapper.innerHTML = generateHtmlTable(data);
+                }
+            } catch (err) {
+                resultsWrapper.innerHTML = renderError('Network Error', err.message);
+            }
+            
+            // Reload sidebar & dashboard counts in case data mutated
+            loadSidebarTables();
+            loadDashboardData();
+        }
+
+        // Helpers: Generate HTML table from JSON list
+        function generateHtmlTable(data) {
+            if (!Array.isArray(data) || data.length === 0) {
+                return `
+                    <div class="empty-state">
+                        <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zM12 6H7v2h5V6zm5 4H7v2h10v-2zm0 4H7v2h10v-2z"/></svg>
+                        <p>No records or results returned by this query.</p>
+                    </div>
+                `;
+            }
+
+            const headers = Object.keys(data[0]);
+            
+            let html = '<table><thead><tr>';
+            headers.forEach(h => {
+                html += `<th>${escapeHtml(h)}</th>`;
+            });
+            html += '</tr></thead><tbody>';
+
+            data.forEach(row => {
+                html += '<tr>';
+                headers.forEach(h => {
+                    const val = row[h];
+                    html += `<td>${val !== null ? escapeHtml(val.toString()) : '<span style="opacity:0.3;font-style:italic;">NULL</span>'}</td>`;
+                });
+                html += '</tr>';
+            });
+
+            html += '</tbody></table>';
+            return html;
+        }
+
+        function escapeHtml(text) {
+            if (typeof text !== 'string') return text;
+            return text
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        function renderSpinner() {
+            return `
+                <div class="loader">
+                    <div class="spinner"></div>
+                    <p>Loading database records...</p>
+                </div>
+            `;
+        }
+
+        function renderError(title, msg) {
+            return `
+                <div class="error-card">
+                    <div class="error-card-title">
+                        <svg viewBox="0 0 24 24" style="width:20px; height:20px; fill:currentColor;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+                        <span>${escapeHtml(title)}</span>
+                    </div>
+                    <div class="error-card-body">${escapeHtml(msg)}</div>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>
